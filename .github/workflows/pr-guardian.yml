@@ -1,0 +1,53 @@
+# Added and kept up to date by codetalk-23/pr-guardian. Edits here get overwritten.
+# Every PR gets a fresh AI code + security review; see the pr-guardian README.
+# This is the version for repos outside the codetalk-23 account: GitHub only lets a private
+# repo's workflows be called from the same account, so this loads pr-guardian with the
+# GitHub App and runs its review action directly.
+name: PR Guardian
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  review:
+    # PR Guardian marking its own PR ready fires ready_for_review; don't start a run for that.
+    if: >-
+      !(github.event.action == 'ready_for_review' && github.event.pull_request.user.type == 'Bot')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: pr-guardian-${{ github.repository }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: ${{ github.event.action == 'synchronize' }}
+    steps:
+      - name: Get read token for pr-guardian
+        id: read-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.PR_GUARDIAN_CLIENT_ID }}
+          private-key: ${{ secrets.PR_GUARDIAN_APP_KEY }}
+          owner: codetalk-23
+          repositories: pr-guardian
+          permission-contents: read
+
+      - name: Load pr-guardian
+        uses: actions/checkout@v4
+        with:
+          repository: codetalk-23/pr-guardian
+          ref: main
+          token: ${{ steps.read-token.outputs.token }}
+          path: .pr-guardian
+          persist-credentials: false
+
+      - name: Review
+        uses: ./.pr-guardian
+        with:
+          client-id: ${{ secrets.PR_GUARDIAN_CLIENT_ID }}
+          private-key: ${{ secrets.PR_GUARDIAN_APP_KEY }}
+          app-slug: ${{ steps.read-token.outputs.app-slug }}
+          claude-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          resend-api-key: ${{ secrets.RESEND_API_KEY }}
