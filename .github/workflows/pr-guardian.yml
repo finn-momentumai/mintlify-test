@@ -1,6 +1,6 @@
-# Added and kept up to date by codetalk-23/pr-guardian. Edits here get overwritten.
+# Added and kept up to date by moos-momentum/pr-guardian. Edits here get overwritten.
 # Every PR gets a fresh AI code + security review; see the pr-guardian README.
-# This is the version for repos outside the codetalk-23 account: GitHub only lets a private
+# This is the version for repos outside the moos-momentum account: GitHub only lets a private
 # repo's workflows be called from the same account, so this loads pr-guardian with the
 # GitHub App and runs its review action directly.
 name: PR Guardian
@@ -30,14 +30,14 @@ jobs:
         with:
           client-id: ${{ secrets.PR_GUARDIAN_CLIENT_ID }}
           private-key: ${{ secrets.PR_GUARDIAN_APP_KEY }}
-          owner: codetalk-23
+          owner: moos-momentum
           repositories: pr-guardian
           permission-contents: read
 
       - name: Load pr-guardian
         uses: actions/checkout@v4
         with:
-          repository: codetalk-23/pr-guardian
+          repository: moos-momentum/pr-guardian
           ref: main
           token: ${{ steps.read-token.outputs.token }}
           path: .pr-guardian
